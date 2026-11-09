@@ -369,13 +369,12 @@
       rgba(255,201,60,.34) 0deg 10deg, rgba(255,93,143,.20) 10deg 20deg,
       rgba(56,182,227,.22) 20deg 30deg, rgba(52,201,142,.20) 30deg 40deg);
     border-radius:50%;opacity:0;
-    animation:prays 2.6s linear;
+    animation:prays 14s linear infinite;
   }
   @keyframes prays{
     0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.6)}
-    12%{opacity:1}
-    80%{opacity:1}
-    100%{opacity:0;transform:translate(-50%,-50%) rotate(50deg) scale(1.05)}
+    8%{opacity:1}
+    100%{opacity:1;transform:translate(-50%,-50%) rotate(360deg) scale(1.05)}
   }
   .perfect-fx .ring{
     position:absolute;left:50%;top:44%;width:120px;height:120px;
@@ -701,7 +700,31 @@
   var wrapEl = document.getElementById('wrap');
   var stageEl = document.getElementById('countStage');
   var fxTimer = null;
+  var fxKeepAlive = null;
   var STAR_GLYPHS = ['⭐','✨','🌟','💛','🎉'];
+
+  /* celebration effects (ぴったり / ほぼぴったり) stay on screen
+     until the player taps a button — they never fade out on a timer.
+     A gentle confetti keep-alive runs while the result is shown so
+     the celebration is still alive, not a frozen leftover frame. */
+  function stopFxKeepAlive(){
+    if (fxKeepAlive){ clearInterval(fxKeepAlive); fxKeepAlive = null; }
+  }
+  function startFxKeepAlive(){
+    stopFxKeepAlive();
+    fxKeepAlive = setInterval(function(){
+      if (!viewResult.classList.contains('on')){ stopFxKeepAlive(); return; }
+      if (typeof pieces !== 'undefined' && pieces.length < 140) burst(12);
+    }, 900);
+  }
+  function clearCelebration(){
+    if (fxTimer){ clearTimeout(fxTimer); fxTimer = null; }
+    stopFxKeepAlive();
+    perfectFx.classList.remove('on');
+    wrapEl.classList.remove('shake');
+    stageEl.classList.remove('glow');
+    if (typeof pieces !== 'undefined') pieces.length = 0;
+  }
 
   function perfectEffect(exact, elapsed){
     perfectMain.textContent = exact ? fmtPlain(TARGET) + '秒 ぴったり！！' : 'ほぼ ぴったり！！';
@@ -739,12 +762,11 @@
     sePerfect();
     if (navigator.vibrate) navigator.vibrate([80,60,80,60,220]);
 
-    if (fxTimer) clearTimeout(fxTimer);
-    fxTimer = setTimeout(function(){
-      perfectFx.classList.remove('on');
-      wrapEl.classList.remove('shake');
-      stageEl.classList.remove('glow');
-    }, 2700);
+    // no auto-dismiss: the stamp, rays and confetti stay exactly as
+    // shown until the player taps もう一回 / タイトルにもどる
+    // (clearCelebration is called from those button handlers)
+    if (fxTimer){ clearTimeout(fxTimer); fxTimer = null; }
+    startFxKeepAlive();
   }
 
   /* ================= confetti ================= */
@@ -811,6 +833,7 @@
      the count stays frozen at 0.00 until スタート is tapped */
   function goReady(){
     ensureAudio();
+    clearCelebration();
     if (freezeTimer){ clearTimeout(freezeTimer); freezeTimer = null; }
     running = false;
     if (rafId) cancelAnimationFrame(rafId);
@@ -827,7 +850,7 @@
     running = true; shutterClosed = false; lastShownSec = -1;
     startStamp = performance.now();
     shutterEl.classList.remove('closed');
-    perfectFx.classList.remove('on');
+    clearCelebration();
     timerEl.innerHTML = fmt(0);
     showView(viewPlay);
     fitTimer();
@@ -930,7 +953,7 @@
       burst(120);
       perfectEffect(Math.abs(diff) < 0.005, elapsed);
     }
-    else if (level === 2){ seFanfare(); burst(90); if (navigator.vibrate) navigator.vibrate([60,60,120]); }
+    else if (level === 2){ seFanfare(); burst(90); if (navigator.vibrate) navigator.vibrate([60,60,120]); startFxKeepAlive(); }
     else if (level === 1){ seFanfare(); burst(36); if (navigator.vibrate) navigator.vibrate(40); }
     else { seBoo(); if (navigator.vibrate) navigator.vibrate(40); }
   }
@@ -940,6 +963,7 @@
   document.getElementById('stopBtn').addEventListener('click', stopGame);
   document.getElementById('retryBtn').addEventListener('click', goReady);
   document.getElementById('backBtn').addEventListener('click', function(){
+    clearCelebration();
     showView(viewTitle);
   });
   document.addEventListener('keydown', function(e){
