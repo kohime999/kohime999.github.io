@@ -837,25 +837,32 @@
 
   /* the count NEVER pauses: elapsed time is always derived from the
      start timestamp, independent of the shutter. The shutter only
-     hides the digits — while it is closed the display update is
-     skipped, but the measurement keeps running underneath, so a
-     stop at ~5–6s reports ~5–6s, not ~3s. */
+     hides the digits once it has FULLY closed — while it is still
+     closing, the display keeps counting down so the player can watch
+     the numbers move until the slats land. The measurement keeps
+     running underneath either way, so a stop at ~5–6s reports ~5–6s,
+     not ~3s. */
   function elapsedNow(){
     return (performance.now() - startStamp) / 1000;
   }
+
+  /* the slats take .55s to slide down plus up to .2s of stagger delay
+     (≈.75s total); during that window the count stays live */
+  var SHUTTER_CLOSE_SEC = 0.8;
 
   function tick(){
     if (!running) return;
     var elapsed = elapsedNow();
 
-    if (!shutterClosed && elapsed < 22){
+    var stillVisible = !shutterClosed || elapsed < SHUTTER_AT + SHUTTER_CLOSE_SEC;
+    if (stillVisible && elapsed < 22){
       timerEl.innerHTML = fmt(Math.min(elapsed, 99.99));
     }
     // whole-second pop + tick sound
     var whole = Math.floor(elapsed);
     if (whole !== lastShownSec){
       lastShownSec = whole;
-      if (!shutterClosed){
+      if (stillVisible){
         timerEl.classList.remove('pop'); void timerEl.offsetWidth; timerEl.classList.add('pop');
         if (whole >= 1 && whole <= 2) se(520 + whole*60, null, 0.07, 'sine', 0.08);
       }
