@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>あしべまつりぴったり10秒チャレンジ</title>
+<style>
+  :root{
+    --bg:#fff6d6;
+    --bg-dot:#ffe9a8;
+    --card:#ffffff;
+    --ink:#3a2b20;
+    --ink-soft:#7a6552;
+    --pink:#ff5d8f;
+    --pink-dark:#e63e74;
+    --pink-soft:#ffe3ee;
+    --yellow:#ffc93c;
+    --yellow-soft:#fff0bf;
+    --sky:#38b6e3;
+    --sky-soft:#dcf4fd;
+    --mint:#34c98e;
+    --mint-soft:#dcf7ec;
+    --orange:#ff8a3c;
+    --shutter:#ffcf3f;
+    --shutter-line:#e8a812;
+    --shadow:rgba(58,43,32,.14);
+    --btn-shadow:rgba(58,43,32,.22);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#241d2e;
+      --bg-dot:#322845;
+      --card:#332a44;
+      --ink:#fdf3e3;
+      --ink-soft:#cbbfab;
+      --pink-soft:#4a2b3d;
+      --yellow-soft:#4a3d1e;
+      --sky-soft:#1e3d4d;
+      --mint-soft:#1d4033;
+      --shadow:rgba(0,0,0,.35);
+      --btn-shadow:rgba(0,0,0,.4);
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;
+    background:var(--bg);
+    background-image:radial-gradient(var(--bg-dot) 22%, transparent 23%);
+    background-size:34px 34px;
+    color:var(--ink);
+    height:100dvh;
+    overflow:hidden;
+  }
+  .wrap{
+    max-width:720px;margin:0 auto;padding:10px 14px 14px;position:relative;
+    height:100dvh;display:flex;flex-direction:column;
+  }
+
+  /* ---------- views: one full screen at a time ---------- */
+  .view{display:none;flex:1;min-height:0;flex-direction:column;position:relative;z-index:1}
+  .view.on{display:flex;animation:viewIn .28s ease}
+  @keyframes viewIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
+
+  /* ---------- floating deco ---------- */
+  .deco{position:absolute;font-size:28px;pointer-events:none;animation:bob 3.2s ease-in-out infinite;z-index:0;line-height:1}
+  .deco.d1{top:12%;left:2px;animation-delay:0s}
+  .deco.d2{top:6%;right:4px;font-size:34px;animation-delay:.7s}
+  .deco.d3{bottom:16%;left:-2px;font-size:24px;animation-delay:1.3s}
+  .deco.d4{bottom:8%;right:0;font-size:26px;animation-delay:.4s}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-10px) rotate(6deg)}}
+  @media (prefers-reduced-motion: reduce){
+    .deco{animation:none}
+    *{animation-duration:.01s !important;transition-duration:.01s !important}
+  }
+
+  /* ================= TITLE VIEW ================= */
+  .big-title{
+    flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+    text-align:left;margin:0;padding:6px 0;
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","Arial Rounded MT Bold","Noto Sans JP","Yu Gothic UI",sans-serif;font-weight:800;
+    line-height:1.18;
+    text-shadow:3px 3px 0 #fff, -1px -1px 0 #fff, 5px 6px 0 var(--shadow);
+  }
+  @media (prefers-color-scheme: dark){
+    .big-title{text-shadow:3px 3px 0 rgba(0,0,0,.35), 5px 6px 0 rgba(0,0,0,.3)}
+  }
+  /* the three title lines share one fixed-width column: every line box
+     spans the same width and its text starts at the same left edge, so
+     the line heads line up. The column itself stays centered. */
+  .big-title .t-line{display:block;white-space:nowrap;width:100%;text-align:left}
+  .big-title .l1{font-size:min(15vw,12.5dvh)}
+  .big-title .l2{font-size:min(23vw,18.5dvh);color:var(--pink)}
+  .big-title .l3{
+    font-size:min(11.9vw,10dvh);
+    display:flex;align-items:center;justify-content:flex-start;
+  }
+  /* the ○秒 badge is a fixed-size slot at the head of line 3: the box
+     never changes size, only the digits inside it ("7秒" sits centered
+     in the same box "10秒" uses), so switching modes moves nothing —
+     badge position, チャレンジ start, line starts and line spacing
+     are identical in 7s and 10s modes */
+  .big-title .hl-ten{
+    flex:0 0 auto;width:2.55em;height:1.34em;
+    display:inline-flex;align-items:center;justify-content:center;
+    margin-right:.08em;line-height:1;text-align:center;
+    background:var(--yellow);color:#5c3d00;
+    padding:0;border-radius:.28em;transform:rotate(-2deg);
+    border:3.5px solid var(--ink);
+    box-shadow:0 6px 0 var(--shutter-line);
+    text-shadow:none;
+  }
+  .title-note{
+    text-align:center;font-weight:800;color:var(--ink-soft);
+    font-size:clamp(15px,4.6vw,21px);margin:0 0 12px;
+  }
+  .title-note b{color:var(--pink-dark)}
+  @media (prefers-color-scheme: dark){ .title-note b{color:var(--pink)} }
+
+  /* ---------- version switch (title screen only) ---------- */
+  .mode-row{display:flex;gap:10px;margin:0 0 12px}
+  .mode-btn{
+    flex:1;min-width:0;font-family:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","Arial Rounded MT Bold","Noto Sans JP","Yu Gothic UI",sans-serif;cursor:pointer;
+    font-size:clamp(15px,4.7vw,26px);white-space:nowrap;
+    padding:12px 2px;min-height:74px;border-radius:22px;
+    border:4px solid var(--ink-soft);background:var(--card);color:var(--ink-soft);
+    box-shadow:0 4px 0 var(--shadow);
+    transition:transform .08s,box-shadow .08s,background .15s,color .15s,border-color .15s;
+    touch-action:manipulation;user-select:none;-webkit-user-select:none;
+  }
+  .mode-btn:active{transform:translateY(4px);box-shadow:0 0 0 var(--shadow)}
+  .mode-btn:focus-visible{outline:4px solid var(--sky);outline-offset:3px}
+  .mode-btn.sel{
+    background:var(--yellow);color:#5c3d00;border-color:var(--ink);
+    box-shadow:0 7px 0 var(--shutter-line),0 12px 0 var(--btn-shadow);
+  }
+  .mode-btn.sel::before{content:"✓ "}
+  @media (prefers-color-scheme: dark){
+    .mode-btn{background:var(--card)}
+    .mode-btn.sel{background:var(--yellow);color:#5c3d00}
+  }
+
+  /* ---------- big buttons ---------- */
+  .big-btn{
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","Arial Rounded MT Bold","Noto Sans JP","Yu Gothic UI",sans-serif;color:#fff;cursor:pointer;white-space:nowrap;
+    background:var(--pink);border:4px solid var(--ink);border-radius:999px;
+    width:100%;touch-action:manipulation;user-select:none;-webkit-user-select:none;
+    transition:transform .08s,box-shadow .08s,background .2s;
+  }
+  .big-btn:active{transform:translateY(7px)}
+  .big-btn:focus-visible{outline:4px solid var(--sky);outline-offset:3px}
+  #startBtn{
+    font-size:min(12.2vw,7.5dvh);padding:22px 10px;min-height:118px;
+    box-shadow:0 12px 0 var(--pink-dark),0 20px 0 var(--btn-shadow);
+    animation:btnPulse 1.6s ease-in-out infinite;
+  }
+  #startBtn:active{box-shadow:0 4px 0 var(--pink-dark),0 9px 0 var(--btn-shadow)}
+  @keyframes btnPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.07)}}
+  #stopBtn{
+    font-size:min(10vw,6dvh);padding:16px 10px;min-height:92px;margin-top:12px;
+    background:var(--orange);box-shadow:0 12px 0 #d96a1e,0 20px 0 var(--btn-shadow);
+  }
+  #stopBtn:active{box-shadow:0 4px 0 #d96a1e,0 9px 0 var(--btn-shadow)}
+  #stopBtn:disabled{opacity:.55}
+  #goBtn{
+    font-size:min(10vw,6dvh);padding:16px 10px;min-height:92px;margin-top:12px;
+    background:var(--pink);box-shadow:0 12px 0 var(--pink-dark),0 20px 0 var(--btn-shadow);
+  }
+  #goBtn:active{box-shadow:0 4px 0 var(--pink-dark),0 9px 0 var(--btn-shadow)}
+  #retryBtn{
+    font-size:clamp(15px,4.5vw,26px);padding:12px 6px;min-height:68px;
+    box-shadow:0 10px 0 var(--pink-dark),0 18px 0 var(--btn-shadow);
+  }
+  #retryBtn:active{box-shadow:0 3px 0 var(--pink-dark),0 8px 0 var(--btn-shadow)}
+  /* result actions: retry + back-to-title as two proper buttons in a row */
+  .result-btns{display:flex;gap:8px;margin-top:12px}
+  .result-btns .big-btn{width:auto;min-width:0}
+  #retryBtn{flex:1.6 1 0}
+  .btn-back{
+    flex:1.15 1 0;background:var(--sky);
+    font-size:clamp(13px,3.5vw,19px);padding:12px 4px;min-height:68px;
+    box-shadow:0 10px 0 #2580a8,0 18px 0 var(--btn-shadow);
+  }
+  .btn-back:active{box-shadow:0 3px 0 #2580a8,0 8px 0 var(--btn-shadow)}
+
+  /* ================= PLAY VIEW: count only, full screen ================= */
+  .count-stage{
+    position:relative;flex:1;min-height:0;background:var(--card);
+    border:3.5px solid var(--ink);border-radius:28px;
+    box-shadow:0 8px 0 var(--shadow);
+    padding:16px 10px 10px;overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  .count-stage::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:14px;z-index:2;
+    background:repeating-linear-gradient(90deg,var(--pink) 0 34px,var(--yellow) 34px 68px,var(--sky) 68px 102px,var(--mint) 102px 136px);
+  }
+  .timer-window{
+    position:relative;flex:1;min-height:0;border-radius:20px;background:var(--sky-soft);
+    border:3px dashed rgba(58,43,32,.25);
+    overflow:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  @media (prefers-color-scheme: dark){ .timer-window{border-color:rgba(255,255,255,.25)} }
+  .timer{
+    font-family:"Arial Rounded MT Bold","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;font-weight:800;
+    font-size:min(29vw,52dvh);line-height:1.0;letter-spacing:.01em;
+    font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap;
+  }
+  .timer .dot-sep{color:var(--pink)}
+  .timer.pop{animation:tpop .18s ease}
+  @keyframes tpop{0%{transform:scale(1)}40%{transform:scale(1.02)}100%{transform:scale(1)}}
+
+  /* shutter */
+  .shutter{
+    position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;
+    pointer-events:none;
+  }
+  .shutter .slat{
+    flex:1;background:repeating-linear-gradient(180deg,var(--shutter) 0 16px,#ffd95e 16px 32px);
+    border-bottom:3px solid var(--shutter-line);
+    transform:translateY(-520%);transition:transform .55s cubic-bezier(.6,.05,.3,1);
+  }
+  .shutter.closed .slat{transform:translateY(0)}
+  .shutter .slat:nth-child(2){transition-delay:.05s}
+  .shutter .slat:nth-child(3){transition-delay:.1s}
+  .shutter .slat:nth-child(4){transition-delay:.15s}
+  .shutter .slat:nth-child(5){transition-delay:.2s}
+  .shutter-face{
+    position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:4px;
+    opacity:0;transition:opacity .3s ease .45s;pointer-events:none;padding:8px;text-align:center;
+  }
+  .shutter.closed ~ .shutter-face{opacity:1}
+  .shutter-face .face-emoji{font-size:min(18vw,11dvh);line-height:1.15}
+  .shutter-face .face-text{
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","Arial Rounded MT Bold","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:min(7.5vw,4.6dvh);
+    color:#5c3d00;background:rgba(255,255,255,.75);padding:4px 18px;border-radius:999px;white-space:nowrap;
+  }
+  .shutter-face .face-sub{font-weight:800;font-size:clamp(12px,3.6vw,15px);color:#7a5200}
+
+  /* ================= RESULT VIEW ================= */
+  .result-nums{
+    flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;
+    min-height:0;padding:10px 0;
+  }
+  .result-block{
+    border:3.5px solid var(--ink);border-radius:24px;box-shadow:0 7px 0 var(--shadow);
+    text-align:center;padding:10px 8px 14px;overflow:hidden;
+    flex:1;min-height:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+  }
+  .result-block.time{background:var(--sky-soft)}
+  .result-block.diff{background:var(--yellow-soft)}
+  .result-block .cap{
+    font-weight:800;letter-spacing:.1em;color:var(--ink-soft);
+    font-size:clamp(14px,4.4vw,19px);white-space:nowrap;
+  }
+  .result-block .val{
+    font-family:"Arial Rounded MT Bold","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;font-weight:800;line-height:1.05;
+    font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink);
+  }
+  .result-block.time .val{font-size:min(21vw,15dvh)}
+  .result-block.diff .val{font-size:min(25vw,18dvh);color:var(--pink-dark)}
+  @media (prefers-color-scheme: dark){ .result-block.diff .val{color:var(--pink)} }
+  .result-block .val .unit{font-size:.42em;margin-left:.08em}
+
+  /* ---------- landscape mode toggle ---------- */
+  #landBtn{
+    position:absolute;top:4px;right:6px;z-index:4;
+    font-family:"Hiragino Maru Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-weight:800;font-size:14.5px;cursor:pointer;
+    border:2.5px solid var(--ink);border-radius:999px;padding:6px 15px;
+    background:var(--sky);color:#fff;box-shadow:0 3px 0 rgba(58,43,32,.25);
+    transition:transform .08s,box-shadow .08s;touch-action:manipulation;
+  }
+  #landBtn:active{transform:translateY(3px);box-shadow:0 0 0 rgba(58,43,32,.25)}
+  body.land #landBtn{background:var(--pink)}
+
+  /* ---------- landscape mode: stage rotated by CSS ---------- */
+  body.land{overflow:hidden}
+  body.land .wrap{
+    position:fixed;inset:0;z-index:2;max-width:none;height:auto;min-height:0;
+  }
+  body.land .deco{display:none}
+  /* wide screens: the count fills the (uncapped) stage, sized off the
+     shorter dimension so the digits never overflow the window */
+  @media (min-width:721px){
+    .timer{font-size:min(52dvh,240px)}
+  }
+  body.land .timer{font-size:min(23vw,50dvh)}
+  /* land title type is a step smaller than before so the version
+     switch row also fits the short stage height in one screen */
+  body.land .big-title .l1{font-size:min(10.5vw,11.5dvh)}
+  body.land .big-title .l2{font-size:min(14.5vw,16dvh)}
+  body.land .big-title .l3{font-size:min(9.5vw,10.5dvh)}
+  /* landscape stage is wider than the title text: shrink the shared
+     title column to the widest line's width (line 3 with its fixed
+     badge) and center the column — the line heads still share one
+     left edge, in both modes */
+  body.land .big-title .t-line{width:min(74vw,82dvh)}
+  /* short landscape heights: compact the title/result chrome so every
+     view still fits one screen */
+  body.land #startBtn{min-height:70px;padding:10px;font-size:min(12.2vw,8dvh)}
+  body.land #stopBtn{min-height:74px;padding:10px}
+  body.land #goBtn{min-height:74px;padding:10px}
+  body.land .title-note{margin-bottom:8px;font-size:15px;line-height:1.3}
+  body.land .mode-row{margin-bottom:8px;gap:8px}
+  body.land .mode-btn{min-height:48px;padding:6px 4px;font-size:min(5.6vmin,26px);border-width:3.5px}
+  /* landscape: the two result cells sit side by side so each cell gets the
+     full (short) height of the stage; stacking them vertically is what
+     clipped the big numbers in the rotated portrait display */
+  body.land .result-nums{flex-direction:row;gap:12px;padding:6px 0}
+  body.land .result-block{
+    flex:1;min-width:0;padding:8px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  /* number sizes key off the rotated stage's real axes: its long axis is
+     max(vw,vh) and its short axis is min(vw,vh), whichever way the device
+     itself is held */
+  body.land .result-block.time .val{font-size:min(max(11vw,11vh),34vmin)}
+  body.land .result-block.diff .val{font-size:min(max(12.5vw,12.5vh),36vmin)}
+  body.land .result-btns{margin-top:8px}
+  body.land #retryBtn{min-height:56px;padding:8px 6px;font-size:min(5.2vmin,28px)}
+  body.land .btn-back{min-height:56px;padding:8px 4px;font-size:min(4.4vmin,22px)}
+  body.land .wrap.shake{animation:none}
+  /* portrait screen: rotate the whole stage 90deg with width/height swapped,
+     so holding the phone sideways shows the landscape layout upright.
+     If the device itself is already landscape, no rotation is applied. */
+  @media (orientation: portrait){
+    body.land .wrap{
+      inset:auto;left:50%;top:50%;
+      width:100dvh;height:100dvw;
+      transform:translate(-50%,-50%) rotate(90deg);
+    }
+    body.land .perfect-fx{
+      inset:auto;left:50%;top:50%;
+      width:100dvh;height:100dvw;
+      transform:translate(-50%,-50%) rotate(90deg);
+    }
+    body.land #confetti{
+      inset:auto;left:50%;top:50%;
+      width:100dvh;height:100dvw;
+      transform:translate(-50%,-50%) rotate(90deg);
+    }
+  }
+
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+
+  /* ---------- PERFECT special effect ---------- */
+  .perfect-fx{
+    position:fixed;inset:0;z-index:60;pointer-events:none;
+    display:none;overflow:hidden;
+  }
+  .perfect-fx.on{display:block}
+  .perfect-fx .flash{
+    position:absolute;inset:0;background:#fff;opacity:0;
+    animation:pflash .5s ease-out;
+  }
+  @keyframes pflash{0%{opacity:.95}100%{opacity:0}}
+  .perfect-fx .rays{
+    position:absolute;left:50%;top:44%;width:170vmax;height:170vmax;
+    transform:translate(-50%,-50%);
+    background:repeating-conic-gradient(from 0deg,
+      rgba(255,201,60,.34) 0deg 10deg, rgba(255,93,143,.20) 10deg 20deg,
+      rgba(56,182,227,.22) 20deg 30deg, rgba(52,201,142,.20) 30deg 40deg);
+    border-radius:50%;opacity:0;
+    animation:prays 2.6s linear;
+  }
+  @keyframes prays{
+    0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.6)}
+    12%{opacity:1}
+    80%{opacity:1}
+    100%{opacity:0;transform:translate(-50%,-50%) rotate(50deg) scale(1.05)}
+  }
+  .perfect-fx .ring{
+    position:absolute;left:50%;top:44%;width:120px;height:120px;
+    transform:translate(-50%,-50%);border-radius:50%;
+    border:8px solid var(--yellow);opacity:0;
+    animation:pring 1.1s ease-out .1s;
+  }
+  .perfect-fx .ring.r2{border-color:var(--pink);animation-delay:.28s}
+  .perfect-fx .ring.r3{border-color:var(--sky);animation-delay:.46s}
+  @keyframes pring{
+    0%{opacity:.95;transform:translate(-50%,-50%) scale(.3)}
+    100%{opacity:0;transform:translate(-50%,-50%) scale(6.2)}
+  }
+  .perfect-stamp{
+    position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);
+    text-align:center;width:100%;padding:0 10px;
+  }
+  .perfect-stamp .p-crown{font-size:clamp(44px,11vw,64px);line-height:1;display:block;animation:pdrop .55s cubic-bezier(.2,1.6,.4,1) both}
+  @keyframes pdrop{0%{transform:translateY(-46px) scale(.4);opacity:0}100%{transform:none;opacity:1}}
+  .perfect-stamp .p-main{
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Maru Gothic Pro","Arial Rounded MT Bold","Noto Sans JP","Yu Gothic UI",sans-serif;
+    font-size:clamp(38px,10.5vw,64px);line-height:1.2;color:var(--pink-dark);
+    background:var(--card);border:4.5px solid var(--ink);border-radius:26px;
+    display:inline-block;padding:8px 26px 12px;margin-top:6px;
+    box-shadow:0 10px 0 var(--shadow);
+    animation:pstamp .5s cubic-bezier(.2,1.8,.35,1) .12s both;
+  }
+  @media (prefers-color-scheme: dark){ .perfect-stamp .p-main{color:var(--pink)} }
+  @keyframes pstamp{
+    0%{transform:scale(2.6) rotate(-14deg);opacity:0}
+    60%{transform:scale(.92) rotate(2deg);opacity:1}
+    100%{transform:scale(1) rotate(-2deg);opacity:1}
+  }
+  .perfect-stamp .p-time{
+    font-family:"Arial Rounded MT Bold","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;font-weight:800;display:block;
+    font-size:clamp(30px,8.5vw,50px);color:var(--ink);letter-spacing:.02em;
+    font-variant-numeric:tabular-nums;margin-top:8px;
+    text-shadow:2px 2px 0 #fff, 4px 4px 0 var(--shadow);
+    animation:pdrop .5s ease .3s both;
+  }
+  @media (prefers-color-scheme: dark){ .perfect-stamp .p-time{text-shadow:2px 2px 0 rgba(0,0,0,.4)} }
+  .perfect-stamp .p-sub{
+    display:inline-block;margin-top:6px;font-weight:800;font-size:clamp(13px,3.8vw,16px);
+    background:var(--yellow);color:#5c3d00;border:2.5px solid var(--ink);
+    padding:3px 16px;border-radius:999px;animation:pdrop .5s ease .45s both;
+  }
+  .p-star{
+    position:absolute;font-size:26px;line-height:1;pointer-events:none;
+    will-change:transform,opacity;
+  }
+  .wrap.shake{animation:pshake .45s ease}
+  @keyframes pshake{
+    0%,100%{transform:none}
+    15%{transform:translate(-7px,3px) rotate(-.6deg)}
+    35%{transform:translate(6px,-3px) rotate(.6deg)}
+    55%{transform:translate(-5px,-2px)}
+    75%{transform:translate(4px,2px)}
+  }
+  .count-stage.glow{
+    animation:pglow 1.4s ease;
+  }
+  @keyframes pglow{
+    0%,100%{box-shadow:0 8px 0 var(--shadow)}
+    25%{box-shadow:0 0 0 6px var(--yellow),0 0 42px 10px rgba(255,201,60,.75),0 8px 0 var(--shadow)}
+    55%{box-shadow:0 0 0 6px var(--pink),0 0 42px 10px rgba(255,93,143,.65),0 8px 0 var(--shadow)}
+  }
+</style>
+</head>
+<body>
+<canvas id="confetti"></canvas>
+<div class="perfect-fx" id="perfectFx" aria-hidden="true">
+  <div class="rays"></div>
+  <div class="flash"></div>
+  <div class="ring"></div>
+  <div class="ring r2"></div>
+  <div class="ring r3"></div>
+  <div class="perfect-stamp">
+    <span class="p-crown">👑</span>
+    <span class="p-main" id="perfectMain">10.00秒 ぴったり！！</span>
+    <span class="p-time" id="perfectTime">10.00</span>
+    <span class="p-sub">✨ パーフェクト！まつりの レジェンド！ ✨</span>
+  </div>
+</div>
+<div class="wrap" id="wrap">
+  <span class="deco d1" aria-hidden="true">🎈</span>
+  <span class="deco d2" aria-hidden="true">⭐</span>
+  <span class="deco d3" aria-hidden="true">🎪</span>
+  <span class="deco d4" aria-hidden="true">🍭</span>
+  <button id="landBtn" type="button" aria-pressed="false">↻ よこ画面</button>
+
+  <!-- ===== TITLE VIEW ===== -->
+  <section class="view on" id="viewTitle" aria-label="タイトル">
+    <h1 class="big-title">
+      <span class="t-line l1">あしべまつり</span>
+      <span class="t-line l2">ぴったり</span>
+      <span class="t-line l3"><span class="hl-ten" id="titleTargetLabel">10秒</span>チャレンジ</span>
+    </h1>
+    <p class="title-note">スタートをおして、<b id="noteShutter">3秒</b>でシャッターが しまる！<br />かんかくで <b id="noteTarget">10.00秒</b> ぴったりを めざそう！</p>
+    <div class="mode-row" role="group" aria-label="バージョン切り替え">
+      <button class="mode-btn" id="mode7Btn" type="button" aria-pressed="false">7秒バージョン</button>
+      <button class="mode-btn sel" id="mode10Btn" type="button" aria-pressed="true">10秒バージョン</button>
+    </div>
+    <button class="big-btn" id="startBtn" type="button">ゲームを始める</button>
+  </section>
+
+  <!-- ===== READY VIEW: 0.00 waiting for the start tap ===== -->
+  <section class="view" id="viewReady" aria-label="じゅんび">
+    <div class="count-stage">
+      <div class="timer-window">
+        <div class="timer" id="readyTimer">0<span class="dot-sep">.</span>00</div>
+      </div>
+    </div>
+    <button class="big-btn" id="goBtn" type="button">▶ スタート</button>
+  </section>
+
+  <!-- ===== PLAY VIEW: count only ===== -->
+  <section class="view" id="viewPlay" aria-label="カウント">
+    <div class="count-stage" id="countStage">
+      <div class="timer-window">
+        <div class="timer" id="timer" aria-live="off">0<span class="dot-sep">.</span>00</div>
+        <div class="shutter" id="shutter" aria-hidden="true">
+          <div class="slat"></div><div class="slat"></div><div class="slat"></div><div class="slat"></div><div class="slat"></div>
+        </div>
+        <div class="shutter-face" aria-hidden="true">
+          <div class="face-emoji">🙈</div>
+          <div class="face-text">みえないよ〜！</div>
+          <div class="face-sub">あとは きみの かんかくだけが たより！</div>
+        </div>
+      </div>
+    </div>
+    <button class="big-btn" id="stopBtn" type="button">■ ストップ！</button>
+  </section>
+
+  <!-- ===== RESULT VIEW ===== -->
+  <section class="view" id="viewResult" aria-label="けっか" aria-live="polite">
+    <div class="result-nums">
+      <div class="result-block time">
+        <div class="cap">とめた じかん</div>
+        <div class="val" id="resultTime">10.00</div>
+      </div>
+      <div class="result-block diff">
+        <div class="cap" id="resultDiffCap">10秒との さ</div>
+        <div class="val" id="resultDiff">±0.00</div>
+      </div>
+    </div>
+    <div class="result-btns">
+      <button class="big-btn" id="retryBtn" type="button">↻ もう一回 チャレンジ</button>
+      <button class="big-btn btn-back" id="backBtn" type="button">タイトルにもどる</button>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= state ================= */
+  var TARGET = 10.0, SHUTTER_AT = 3.0, FREEZE_MS = 2000;
+  var running = false, startStamp = 0, rafId = null, shutterClosed = false;
+  var lastShownSec = -1, freezeTimer = null;
+
+  var viewTitle = document.getElementById('viewTitle');
+  var viewReady = document.getElementById('viewReady');
+  var viewPlay = document.getElementById('viewPlay');
+  var viewResult = document.getElementById('viewResult');
+  var timerEl = document.getElementById('timer');
+  var readyTimerEl = document.getElementById('readyTimer');
+  var shutterEl = document.getElementById('shutter');
+
+  /* ================= version mode: 7s or 10s =================
+     chosen on the title screen only; the choice stays in TARGET /
+     SHUTTER_AT for the whole run (play, result, retry-to-ready) and
+     is still selected when the player returns to the title screen.
+     7s mode: target 7.00s, shutter closes at 2.0s.
+     10s mode: target 10.00s, shutter closes at 3.0s. */
+  var mode7Btn = document.getElementById('mode7Btn');
+  var mode10Btn = document.getElementById('mode10Btn');
+  var titleTargetLabel = document.getElementById('titleTargetLabel');
+  var noteShutter = document.getElementById('noteShutter');
+  var noteTarget = document.getElementById('noteTarget');
+  var resultDiffCap = document.getElementById('resultDiffCap');
+
+  function setMode(sec){
+    TARGET = sec;
+    SHUTTER_AT = (sec === 7) ? 2.0 : 3.0;
+    var is7 = (sec === 7);
+    mode7Btn.classList.toggle('sel', is7);
+    mode10Btn.classList.toggle('sel', !is7);
+    mode7Btn.setAttribute('aria-pressed', is7 ? 'true' : 'false');
+    mode10Btn.setAttribute('aria-pressed', !is7 ? 'true' : 'false');
+    titleTargetLabel.textContent = sec + '秒';
+    noteShutter.textContent = is7 ? '2秒' : '3秒';
+    noteTarget.textContent = sec.toFixed(2) + '秒';
+    resultDiffCap.textContent = sec + '秒との さ';
+  }
+  mode7Btn.addEventListener('click', function(){ ensureAudio(); setMode(7); });
+  mode10Btn.addEventListener('click', function(){ ensureAudio(); setMode(10); });
+  setMode(10);
+
+  function showView(v){
+    viewTitle.classList.toggle('on', v === viewTitle);
+    viewReady.classList.toggle('on', v === viewReady);
+    viewPlay.classList.toggle('on', v === viewPlay);
+    viewResult.classList.toggle('on', v === viewResult);
+  }
+
+  function fmt(t){
+    var s = t.toFixed(2);
+    var parts = s.split('.');
+    return parts[0] + '<span class="dot-sep">.</span>' + parts[1];
+  }
+  function fmtPlain(t){ return t.toFixed(2); }
+
+  /* size the count so it fills the timer window: measure the widest
+     string ("10.00") and scale the font to the window's real box, so the
+     digits span the frame yet never clip — portrait or rotated landscape */
+  var measureCtx = document.createElement('canvas').getContext('2d');
+  function fitTimerEl(el){
+    var win = el.parentElement;
+    if (!win) return;
+    var availW = win.clientWidth - 20;
+    var availH = win.clientHeight - 14;
+    if (availW <= 0 || availH <= 0) return;
+    measureCtx.font = '800 100px "Arial Rounded MT Bold","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif';
+    var w = measureCtx.measureText('10.00').width;
+    if (!w) return;
+    w *= 1.06; /* letter-spacing + safety margin */
+    var fs = 100 * Math.min((availW * 0.97) / w, availH / 100);
+    el.style.fontSize = fs + 'px';
+  }
+  function fitTimer(){
+    fitTimerEl(timerEl);
+    fitTimerEl(readyTimerEl);
+  }
+
+  /* size each result number so it fills its cell: measure the widest
+     string that cell can ever show in EITHER mode ("30.00秒" for the
+     stopped time; for the diff, "−23.00秒" — the 7s mode's widest form
+     (+23.00 at the 30s cap) combined with the wide minus sign, which
+     also covers the 10s mode's "−20.00秒") and scale the font to the
+     cell's real box, so the digits span the frame yet never clip —
+     portrait or rotated landscape */
+  var resultTimeEl = document.getElementById('resultTime');
+  var resultDiffEl = document.getElementById('resultDiff');
+  function fitOneResult(el, digits){
+    var block = el.parentElement;
+    if (!block) return;
+    var cap = block.querySelector('.cap');
+    var availW = block.clientWidth - 16 - 7;  /* side padding + borders */
+    var availH = block.clientHeight - (cap ? cap.offsetHeight : 0) - 24 - 7;
+    if (availW <= 0 || availH <= 0) return;
+    measureCtx.font = '800 100px "Arial Rounded MT Bold","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif';
+    var w = measureCtx.measureText(digits).width;
+    measureCtx.font = '800 42px "Hiragino Maru Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif';
+    w += measureCtx.measureText('秒').width + 4; /* smaller unit span + its margin */
+    if (!w) return;
+    w *= 1.05; /* safety margin */
+    var fs = 100 * Math.min((availW * 0.97) / w, (availH * 0.96) / 105);
+    el.style.fontSize = fs + 'px';
+  }
+  function fitResults(){
+    fitOneResult(resultTimeEl, '30.00');
+    fitOneResult(resultDiffEl, '−23.00');
+  }
+
+  /* ================= audio: sound effects only (no BGM) ================= */
+  var AC = null;
+  var masterGain = null;
+
+  function ensureAudio(){
+    if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
+    var Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return;
+    AC = new Ctor();
+    masterGain = AC.createGain(); masterGain.gain.value = 0.9; masterGain.connect(AC.destination);
+  }
+
+  /* --- landscape mode toggle (pure CSS rotation, no device rotation API) --- */
+  var landBtn = document.getElementById('landBtn');
+  landBtn.addEventListener('click', function(){
+    var on = document.body.classList.toggle('land');
+    landBtn.textContent = on ? '↻ たて画面' : '↻ よこ画面';
+    landBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    pieces.length = 0;
+    sizeCanvas();
+    requestAnimationFrame(function(){ fitTimer(); fitResults(); });
+  });
+
+  /* --- sound effects --- */
+  function se(freqFrom, freqTo, dur, type, vol, delay){
+    ensureAudio(); if (!AC) return;
+    var t = AC.currentTime + (delay || 0);
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(freqFrom, t);
+    if (freqTo) o.frequency.exponentialRampToValueAtTime(freqTo, t + dur);
+    g.gain.setValueAtTime(vol || 0.15, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(masterGain);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  function seStart(){ se(660, 990, 0.14, 'square', 0.12); }
+  function seShutter(){ se(320, 70, 0.38, 'sawtooth', 0.16); se(180, 60, 0.3, 'square', 0.10, 0.05); }
+  function seStop(){ se(880, 660, 0.12, 'square', 0.12); }
+  function seFanfare(){
+    var notes = [523,659,784,1047];
+    for (var i=0;i<notes.length;i++) se(notes[i], null, 0.22, 'triangle', 0.18, i*0.11);
+  }
+  function seBoo(){ se(300, 160, 0.35, 'sawtooth', 0.10); }
+  function sePerfect(){
+    // big fanfare + rising sparkle arpeggio, only for a perfect hit
+    var fan = [523,659,784,1047,784,1047,1319,1568];
+    for (var i=0;i<fan.length;i++) se(fan[i], null, 0.26, 'triangle', 0.20, i*0.10);
+    var spark = [1319,1568,1760,2093,2349,2637];
+    for (var j=0;j<spark.length;j++) se(spark[j], null, 0.20, 'sine', 0.13, 0.55 + j*0.07);
+    se(196, null, 0.7, 'triangle', 0.16, 0); se(262, null, 0.7, 'triangle', 0.14, 0.1);
+  }
+
+  /* ================= PERFECT special effect ================= */
+  var perfectFx = document.getElementById('perfectFx');
+  var perfectMain = document.getElementById('perfectMain');
+  var perfectTime = document.getElementById('perfectTime');
+  var wrapEl = document.getElementById('wrap');
+  var stageEl = document.getElementById('countStage');
+  var fxTimer = null;
+  var STAR_GLYPHS = ['⭐','✨','🌟','💛','🎉'];
+
+  function perfectEffect(exact, elapsed){
+    perfectMain.textContent = exact ? fmtPlain(TARGET) + '秒 ぴったり！！' : 'ほぼ ぴったり！！';
+    perfectTime.textContent = fmtPlain(elapsed);
+    // restart CSS animations by re-inserting the overlay
+    perfectFx.classList.remove('on');
+    void perfectFx.offsetWidth;
+    perfectFx.classList.add('on');
+
+    wrapEl.classList.remove('shake'); void wrapEl.offsetWidth; wrapEl.classList.add('shake');
+    stageEl.classList.remove('glow'); void stageEl.offsetWidth; stageEl.classList.add('glow');
+
+    var cx = cvs.width / 2, cy = cvs.height * 0.44;
+    explode(cx, cy, exact ? 90 : 60);
+    setTimeout(function(){ explode(cx, cy, 50); burst(70); }, 260);
+    setTimeout(function(){ explode(cvs.width*0.18, cvs.height*0.85, 36); explode(cvs.width*0.82, cvs.height*0.85, 36); }, 480);
+
+    // flying stars / sparkles
+    for (var i=0;i<16;i++){
+      var s = document.createElement('span');
+      s.className = 'p-star';
+      s.textContent = STAR_GLYPHS[i % STAR_GLYPHS.length];
+      s.style.left = cx + 'px'; s.style.top = cy + 'px';
+      s.style.fontSize = (18 + Math.random()*26) + 'px';
+      perfectFx.appendChild(s);
+      var ang = Math.random() * Math.PI * 2;
+      var dist = 130 + Math.random() * Math.max(window.innerWidth, window.innerHeight) * 0.42;
+      var anim = s.animate([
+        { transform:'translate(-50%,-50%) scale(.4) rotate(0deg)', opacity:1 },
+        { transform:'translate(' + (Math.cos(ang)*dist - 14) + 'px,' + (Math.sin(ang)*dist - 14) + 'px) scale(1.25) rotate(' + (Math.random()*260-130) + 'deg)', opacity:0 }
+      ], { duration: 1100 + Math.random()*700, easing:'cubic-bezier(.15,.7,.3,1)', delay: Math.random()*160 });
+      (function(el, a){ a.onfinish = function(){ if (el.parentNode) el.parentNode.removeChild(el); }; })(s, anim);
+    }
+
+    sePerfect();
+    if (navigator.vibrate) navigator.vibrate([80,60,80,60,220]);
+
+    if (fxTimer) clearTimeout(fxTimer);
+    fxTimer = setTimeout(function(){
+      perfectFx.classList.remove('on');
+      wrapEl.classList.remove('shake');
+      stageEl.classList.remove('glow');
+    }, 2700);
+  }
+
+  /* ================= confetti ================= */
+  var cvs = document.getElementById('confetti'), ctx = cvs.getContext('2d');
+  var pieces = [], confettiRaf = null;
+  function sizeCanvas(){
+    // in landscape mode on a portrait screen the canvas is CSS-rotated with
+    // the stage, so its drawing buffer swaps width/height to match
+    if (document.body.classList.contains('land') && window.innerHeight > window.innerWidth){
+      cvs.width = window.innerHeight; cvs.height = window.innerWidth;
+    } else {
+      cvs.width = window.innerWidth; cvs.height = window.innerHeight;
+    }
+  }
+  window.addEventListener('resize', function(){ sizeCanvas(); fitTimer(); fitResults(); });
+  sizeCanvas();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ fitTimer(); fitResults(); });
+  var CONF_COLORS = ['#ff5d8f','#ffc93c','#38b6e3','#34c98e','#ff8a3c'];
+  function burst(n){
+    for (var i=0;i<n;i++){
+      pieces.push({
+        x: Math.random()*cvs.width, y: -20 - Math.random()*cvs.height*0.35,
+        w: 7+Math.random()*7, h: 10+Math.random()*8,
+        vy: 2.2+Math.random()*3.2, vx: -1.2+Math.random()*2.4,
+        rot: Math.random()*Math.PI, vr: -0.12+Math.random()*0.24,
+        color: CONF_COLORS[i % CONF_COLORS.length]
+      });
+    }
+    if (!confettiRaf) confettiLoop();
+  }
+  // radial explosion from a point (for the PERFECT effect)
+  function explode(cx, cy, n){
+    for (var i=0;i<n;i++){
+      var ang = Math.random() * Math.PI * 2;
+      var spd = 2.5 + Math.random() * 6.5;
+      pieces.push({
+        x: cx, y: cy,
+        w: 6+Math.random()*7, h: 9+Math.random()*8,
+        vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd - 2.5,
+        g: 0.16,
+        rot: Math.random()*Math.PI, vr: -0.15+Math.random()*0.3,
+        color: CONF_COLORS[i % CONF_COLORS.length]
+      });
+    }
+    if (!confettiRaf) confettiLoop();
+  }
+  function confettiLoop(){
+    ctx.clearRect(0,0,cvs.width,cvs.height);
+    pieces = pieces.filter(function(p){ return p.y < cvs.height + 30; });
+    for (var i=0;i<pieces.length;i++){
+      var p = pieces[i];
+      if (p.g) p.vy += p.g;
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    }
+    if (pieces.length){ confettiRaf = requestAnimationFrame(confettiLoop); }
+    else { confettiRaf = null; ctx.clearRect(0,0,cvs.width,cvs.height); }
+  }
+
+  /* ================= game flow ================= */
+  /* step 1: title's ゲームを始める only opens the ready screen —
+     the count stays frozen at 0.00 until スタート is tapped */
+  function goReady(){
+    ensureAudio();
+    if (freezeTimer){ clearTimeout(freezeTimer); freezeTimer = null; }
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    readyTimerEl.innerHTML = fmt(0);
+    showView(viewReady);
+    fitTimer();
+    requestAnimationFrame(fitTimer);
+  }
+
+  function startGame(){
+    ensureAudio();
+    if (freezeTimer){ clearTimeout(freezeTimer); freezeTimer = null; }
+    document.getElementById('stopBtn').disabled = false;
+    running = true; shutterClosed = false; lastShownSec = -1;
+    startStamp = performance.now();
+    shutterEl.classList.remove('closed');
+    perfectFx.classList.remove('on');
+    timerEl.innerHTML = fmt(0);
+    showView(viewPlay);
+    fitTimer();
+    seStart();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  /* the count NEVER pauses: elapsed time is always derived from the
+     start timestamp, independent of the shutter. The shutter only
+     hides the digits — while it is closed the display update is
+     skipped, but the measurement keeps running underneath, so a
+     stop at ~5–6s reports ~5–6s, not ~3s. */
+  function elapsedNow(){
+    return (performance.now() - startStamp) / 1000;
+  }
+
+  function tick(){
+    if (!running) return;
+    var elapsed = elapsedNow();
+
+    if (!shutterClosed && elapsed < 22){
+      timerEl.innerHTML = fmt(Math.min(elapsed, 99.99));
+    }
+    // whole-second pop + tick sound
+    var whole = Math.floor(elapsed);
+    if (whole !== lastShownSec){
+      lastShownSec = whole;
+      if (!shutterClosed){
+        timerEl.classList.remove('pop'); void timerEl.offsetWidth; timerEl.classList.add('pop');
+        if (whole >= 1 && whole <= 2) se(520 + whole*60, null, 0.07, 'sine', 0.08);
+      }
+    }
+    // shutter closes at SHUTTER_AT (2s in 7s mode, 3s in 10s mode) —
+    // display only; the count above has already advanced past it and
+    // keeps advancing while closed
+    if (!shutterClosed && elapsed >= SHUTTER_AT){
+      shutterClosed = true;
+      shutterEl.classList.add('closed');
+      seShutter();
+      if (navigator.vibrate) navigator.vibrate(60);
+    }
+    // safety cap
+    if (elapsed >= 30){ stopGame(); return; }
+    rafId = requestAnimationFrame(tick);
+  }
+
+  // celebration level only — the result screen shows numbers, no comment text
+  function judge(diff){
+    var a = Math.abs(diff);
+    if (a <= 0.05) return 3;
+    if (a <= 0.30) return 2;
+    if (a <= 1.00) return 1;
+    return 0;
+  }
+
+  function stopGame(){
+    if (!running) return;
+    running = false;
+    if (rafId) cancelAnimationFrame(rafId);
+    // measured from the start timestamp at the moment of the stop,
+    // so time spent behind the closed shutter is fully included
+    var elapsed = elapsedNow();
+    var diff = elapsed - TARGET;
+
+    /* freeze: if the shutter is hiding the count, open it and hold the
+       stopped time on the play screen for ~2 seconds before the result */
+    shutterEl.classList.remove('closed');
+    timerEl.innerHTML = fmt(Math.min(elapsed, 99.99));
+    fitTimer();
+    seStop();
+    var stopBtn = document.getElementById('stopBtn');
+    stopBtn.disabled = true;
+    if (freezeTimer) clearTimeout(freezeTimer);
+    freezeTimer = setTimeout(function(){
+      freezeTimer = null;
+      stopBtn.disabled = false;
+      showResult(elapsed, diff);
+    }, FREEZE_MS);
+  }
+
+  function showResult(elapsed, diff){
+    var level = judge(diff);
+    document.getElementById('resultTime').innerHTML =
+      fmtPlain(elapsed) + '<span class="unit">秒</span>';
+    document.getElementById('resultDiff').innerHTML =
+      (diff >= 0 ? '+' : '−') + Math.abs(diff).toFixed(2) + '<span class="unit">秒</span>';
+    showView(viewResult);
+    fitResults();
+    requestAnimationFrame(fitResults);
+
+    if (level === 3){
+      // ぴったり！ special effect takes over the celebration
+      burst(120);
+      perfectEffect(Math.abs(diff) < 0.005, elapsed);
+    }
+    else if (level === 2){ seFanfare(); burst(90); if (navigator.vibrate) navigator.vibrate([60,60,120]); }
+    else if (level === 1){ seFanfare(); burst(36); if (navigator.vibrate) navigator.vibrate(40); }
+    else { seBoo(); if (navigator.vibrate) navigator.vibrate(40); }
+  }
+
+  document.getElementById('startBtn').addEventListener('click', goReady);
+  document.getElementById('goBtn').addEventListener('click', startGame);
+  document.getElementById('stopBtn').addEventListener('click', stopGame);
+  document.getElementById('retryBtn').addEventListener('click', goReady);
+  document.getElementById('backBtn').addEventListener('click', function(){
+    showView(viewTitle);
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.code === 'Space' && !e.repeat && e.target === document.body){
+      e.preventDefault();
+      if (running) stopGame();
+      else if (viewTitle.classList.contains('on')) goReady();
+      else if (viewReady.classList.contains('on')) startGame();
+      else if (viewResult.classList.contains('on')) goReady();
+    }
+  });
+})();
+</script>
+</body>
+</html>
