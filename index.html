@@ -281,6 +281,16 @@
   #landBtn:active{transform:translateY(3px);box-shadow:0 0 0 rgba(58,43,32,.25)}
   body.land #landBtn{background:var(--pink)}
 
+  /* ---------- gamepad connection status ---------- */
+  .pad-status{
+    position:absolute;left:6px;top:4px;z-index:5;
+    font-size:12.5px;font-weight:800;color:var(--ink-soft);
+    background:var(--card);border:2px solid var(--ink-soft);border-radius:999px;
+    padding:3px 12px;opacity:.9;pointer-events:none;white-space:nowrap;
+  }
+  .pad-status.on{color:#1d7a52;border-color:var(--mint)}
+  @media (prefers-color-scheme: dark){ .pad-status.on{color:#7fe3b8} }
+
   /* ---------- landscape mode: stage rotated by CSS ---------- */
   body.land{overflow:hidden}
   body.land .wrap{
@@ -464,6 +474,7 @@
   <span class="deco d3" aria-hidden="true">🎪</span>
   <span class="deco d4" aria-hidden="true">🍭</span>
   <button id="landBtn" type="button" aria-pressed="false">↻ よこ画面</button>
+  <div class="pad-status" id="padStatus" aria-live="polite">🎮 コントローラー: 未接続</div>
 
   <!-- ===== TITLE VIEW ===== -->
   <section class="view on" id="viewTitle" aria-label="タイトル">
@@ -966,6 +977,83 @@
     clearCelebration();
     showView(viewTitle);
   });
+  /* ================= USB gamepad (Gamepad API) =================
+     Standard mapping:
+       A (button 0) = tap — the main button of the current screen
+         title: ゲームを始める / ready: スタート / play: ストップ /
+         result: もう一回
+       B (button 1) = back — result / ready → title
+       D-pad left (14) / LB (4)  = 7秒バージョン (title screen)
+       D-pad right (15) / RB (5) = 10秒バージョン (title screen)
+       left stick left/right also switches the version on the title.
+     Buttons are polled every animation frame and acted on at the
+     press edge, so holding a button never repeats an action. */
+  var padStatusEl = document.getElementById('padStatus');
+  var padPrev = {};      /* button index -> was pressed last frame */
+  var padAxisPrev = 0;   /* -1 / 0 / +1 stick direction last frame */
+  var padSeen = false;
+
+  function setPadStatus(on){
+    padStatusEl.textContent = on ? '🎮 コントローラー: 接続中' : '🎮 コントローラー: 未接続';
+    padStatusEl.classList.toggle('on', on);
+  }
+  window.addEventListener('gamepadconnected', function(){ padSeen = true; setPadStatus(true); });
+  window.addEventListener('gamepaddisconnected', function(){
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    var any = false;
+    for (var i = 0; i < pads.length; i++) if (pads[i]) { any = true; break; }
+    setPadStatus(any);
+  });
+
+  function padMainAction(){
+    ensureAudio();
+    if (running) stopGame();
+    else if (viewTitle.classList.contains('on')) goReady();
+    else if (viewReady.classList.contains('on')) startGame();
+    else if (viewResult.classList.contains('on')) goReady();
+    /* during the post-stop freeze the play view is still up but
+       running is false — A does nothing there on purpose */
+  }
+  function padBackAction(){
+    ensureAudio();
+    if (viewResult.classList.contains('on') || viewReady.classList.contains('on')){
+      clearCelebration();
+      showView(viewTitle);
+    }
+  }
+  function padPress(idx){
+    if (idx === 0) padMainAction();
+    else if (idx === 1) padBackAction();
+    else if (viewTitle.classList.contains('on')){
+      if (idx === 14 || idx === 4){ ensureAudio(); setMode(7); }
+      else if (idx === 15 || idx === 5){ ensureAudio(); setMode(10); }
+    }
+  }
+
+  function pollPad(){
+    var pads = navigator.getGamepads ? navigator.getGamepads() : [];
+    var gp = null;
+    for (var i = 0; i < pads.length; i++) if (pads[i] && pads[i].connected) { gp = pads[i]; break; }
+    if (gp){
+      if (!padSeen){ padSeen = true; setPadStatus(true); }
+      for (var b = 0; b < gp.buttons.length; b++){
+        var pressed = !!(gp.buttons[b] && gp.buttons[b].pressed);
+        if (pressed && !padPrev[b]) padPress(b);
+        padPrev[b] = pressed;
+      }
+      /* left stick: flick left/right to switch version on the title */
+      var ax = gp.axes && gp.axes.length ? gp.axes[0] : 0;
+      var dir = ax < -0.6 ? -1 : (ax > 0.6 ? 1 : 0);
+      if (dir !== 0 && padAxisPrev === 0 && viewTitle.classList.contains('on')){
+        ensureAudio();
+        setMode(dir < 0 ? 7 : 10);
+      }
+      padAxisPrev = dir;
+    }
+    requestAnimationFrame(pollPad);
+  }
+  if (navigator.getGamepads) requestAnimationFrame(pollPad);
+
   document.addEventListener('keydown', function(e){
     if (e.code === 'Space' && !e.repeat && e.target === document.body){
       e.preventDefault();
